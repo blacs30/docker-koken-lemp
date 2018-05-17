@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  db:
+    image: mariadb
+    restart: always
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+      - MYSQL_PASSWORD=koken
+      - MYSQL_DATABASE=koken
+      - MYSQL_USER=koken
+
+  app:
+    image: blacs30/koken:fpm
+    restart: always
+    volumes:
+      - koken:/var/www/html
+    environment:
+      - DATABASE_PASSWORD=koken
+      - DATABASE_HOST=db
+      - DATABASE_NAME=koken
+      - DATABASE_USER=koken
+      - PHP_MAX_FILESIZE=200m
+    depends_on:
+      - db
+
+  web:
+    build: ./web
+    restart: always
+    ports:
+      - 8080:80
+    volumes:
+      - koken:/var/www/html:ro
+    depends_on:
+      - app
+
+  cron:
+    image: blacs30/koken:fpm
+    restart: always
+    volumes:
+      - koken:/var/www/html
+    entrypoint: /cron.sh
+    depends_on:
+      - db
+
+volumes:
+  db:
+  koken:
