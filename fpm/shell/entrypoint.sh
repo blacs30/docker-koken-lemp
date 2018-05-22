@@ -32,6 +32,7 @@ if [ ! -f /var/www/html/storage/configuration/database.php ] && [ ! -f /var/www/
   sed -i -e "s/___DBHOST___/$DATABASE_HOST/" /var/www/html/database.php
   sed -i -e "s/___DBNAME___/$DATABASE_NAME/" /var/www/html/database.php
   sed -i -e "s/___DBUSER___/$DATABASE_USER/" /var/www/html/database.php
+
   chown www-data:www-data /var/www/html/
   chmod -R 755 /var/www/html
 fi
@@ -87,6 +88,17 @@ if [ -f /var/www/html/installer.php ] && [ ! -f /var/www/html/ready.txt ]; then
   mv user_setup.php storage/configuration;
 
   touch /var/www/html/ready.txt;
+
+  # Disable google maps
+  sed -i 's|.*maps.googleapis.com/maps.*|<!-- script src="https://maps.googleapis.com/maps/api/js?v=3.exp\&sensor=false"></script -->|' /var/www/html/admin/index.html
+
+  # Disable remote jquery.min.js
+  sed -i 's|.*ajax.googleapis.com/ajax.*|<script src="/app/site/themes/common/js/jquery.min.js"></script>|' /var/www/html/app/site/site.php
+
+  # Download OxyGen theme
+  cd /tmp && wget https://github.com/blacs30/OxyGen/archive/master.zip
+  unzip /tmp/master.zip
+  mv /tmp/OxyGen-master/OxyGen /var/www/html/storage/themes/
 
   chown -R www-data:www-data /var/www/html;
 
