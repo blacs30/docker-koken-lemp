@@ -15,20 +15,32 @@ RUN set -ex; \
         libicu-dev \
         libjpeg-dev \
         libmcrypt-dev \
-        libpng12-dev \
+        libpng16-16 \
         libpq-dev \
         busybox-static \
         netcat \
             && mkdir -p /var/spool/cron/crontabs; \
-    echo '0 0 * * * find /var/www/html/storage/cache/images/* -atime +10 -exec rm {} \;' > /var/spool/cron/crontabs/www-data
+    echo '0 0 * * * find /var/www/html/storage/cache/images/* -atime +10 -exec rm  -r {} \;' > /var/spool/cron/crontabs/www-data
 
-RUN set -ex; apt-get update && apt-get -y install graphicsmagick pwgen wget unzip aptitude libgraphicsmagick1-dev
+RUN set -ex; \
+    apt-get update \
+    && apt-get -y install \
+        graphicsmagick \
+        pwgen \
+        wget \
+        unzip \
+        aptitude \
+        libgraphicsmagick1-dev
 
-RUN set -ex; echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list.d/ffmpeg.list && echo deb-src http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list.d/ffmpeg.list && aptitude update && aptitude -o Aptitude::Cmdline::ignore-trust-violations=true -y install ffmpeg
+RUN set -ex; \
+    echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list.d/ffmpeg.list \
+    && echo deb-src http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list.d/ffmpeg.list \
+    && apt-get update \
+    && apt-get install  deb-multimedia-keyring -y --allow-unauthenticated \
+    && aptitude -o Aptitude::Cmdline::ignore-trust-violations=true -y install ffmpeg
 
 RUN set -ex; \
     debMultiarch="$(dpkg-architecture --query DEB_BUILD_MULTIARCH)"; \
-    # docker-php-ext-configure gd --with-freetype-dir=/usr --with-png-dir=/usr --with-jpeg-dir=/usr; \
     docker-php-ext-install \
         exif \
         intl \
@@ -45,8 +57,6 @@ RUN set -ex; \
 
 # Configuration
 RUN docker-php-ext-enable mcrypt gmagick
-
-# RUN sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g" /etc/php5/fpm/php.ini && \
 
 RUN    sed -i -e "s/;pm.max_requests\s*=\s*500/pm.max_requests = 500/g" /usr/local/etc/php-fpm.d/www.conf \
     && echo "cgi.fix_pathinfo=0" > /usr/local/etc/php/conf.d/pathinfo.ini \
